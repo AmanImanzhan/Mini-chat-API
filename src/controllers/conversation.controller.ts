@@ -1,76 +1,24 @@
 import { Request, Response } from "express"
-import { prisma } from "../prisma.client.js"
+import * as conversationService from "../services/conversation.service.js"
 
 export const createConversation = async (req: Request, res: Response) => {
   const { userIds } = req.body
 
   try {
-    const conversation = await prisma.conversation.create({
-      data: {
-        members: {
-          create: userIds.map((id: number) => ({
-            userId: id
-          }))
-        }
-      },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true
-              }
-            }
-          }
-        }
-      }
-    })
-
+    const conversation = await conversationService.createConversation(userIds)
     res.json(conversation)
-
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: "Failed to create conversation" })
+    res.status(400).json({ error: "Failed to create conversation" })
   }
 }
 
 export const getConversations = async (req: Request, res: Response) => {
+  const userId = req.user!.userId
+
   try {
-    const userId = req.user!.userId
-
-    const conversations = await prisma.conversation.findMany({
-      where: {
-        members: {
-          some: { userId }
-        }
-      },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true
-              }
-            }
-          }
-        },
-        messages: {
-          take: 1,
-          orderBy: { createdAt: "desc" },
-          select: {
-            content: true,
-            createdAt: true
-          }
-        }
-      }
-    })
-
+    const conversations = await conversationService.getConversations(userId)
     res.json(conversations)
-
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: "Failed to get conversations" })
+    res.status(500).json({ error: "Failed to fetch conversations" })
   }
 }

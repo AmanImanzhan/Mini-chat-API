@@ -1,73 +1,32 @@
 import { Request, Response } from "express"
-import { prisma } from "../prisma.client.js"
-import { error } from "node:console"
+import * as messageService from "../services/message.service.js"
 
-export const sendMessage = async (req:Request, res:Response) => {
-    const content = req.body
-    const conversationId = Number(req.params.id)
+export const sendMessage = async (req: Request, res: Response) => {
+  const { content, conversationId } = req.body
+  const userId = req.user!.userId
 
-    const messages = await prisma.message.findMany({
-        where: { conversationId },
-        orderBy: { createdAt: "asc" },
-        take: 50,
-        select: {
-            id: true,
-            content: true, 
-            createdAt: true,
-            author: {
-                select: {
-                    id: true,
-                    email: true
-                }
-            }
-        }
-    })
+  try {
+    const message = await messageService.sendMessage(
+      content,
+      userId,
+      conversationId
+    )
 
-    if (!conversationId) {
-        return res.status(400).json({ error: "conversationId required"})
-    }
-
-    try {
-        const message = await prisma.message.create({
-            data: {
-                conversationId,
-                authorId: req.user!.userId,
-                content
-            }
-        })
-
-        res.json(message)
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({error: "Failed to send message"})
-    }
+    res.json(message)
+  } catch (error) {
+    res.status(400).json({ error: "Failed to send message" })
+  }
 }
 
-export const getMessages = async (req:Request, res:Response) => {
-    const conversationId = Number(req.params.id)
+export const getMessages = async (req: Request, res: Response) => {
+  try {
+    const { conversationId } = req.params
 
-    try {
-        const messages = await prisma.message.findMany({
-            where:{ conversationId },
-            orderBy:{ createdAt: "desc" },
-            take: 50,
-            select: {
-                id: true,
-                content: true,
-                createdAt: true,
-                author: {
-                    select: {
-                        id: true,
-                        email: true
-                    }
-                }
-            }
-        })
-        
+    const messages = await messageService.getMessages(Number(conversationId))
 
-        res.json(messages)
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({error: "Failed to get messages"})
-    }
+    res.json(messages)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: "Failed to get messages" })
+  }
 }
