@@ -5,10 +5,6 @@ export const sendMessage = async (
   userId: number,
   conversationId: number
 ) => {
-  if (!content) {
-    throw new Error("Message content required")
-  }
-
   return messageRepository.createMessage(content, userId, conversationId)
 }
 

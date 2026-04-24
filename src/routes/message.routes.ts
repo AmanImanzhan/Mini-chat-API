@@ -2,16 +2,26 @@ import { Router } from "express"
 import { sendMessage, getMessages } from "../controllers/message.controller.js"
 import { currentUser } from "../middlewares/currentUser.js"
 import { checkConversationAccess } from "../middlewares/checkConversationAccess.js"
+import { validateSendMessage } from "../middlewares/validateSendMessage.js"
+import { asyncHandler } from "../middlewares/asyncHandler.js"
+import { validateGetMessages } from "../middlewares/ validateGetMessages.js"
+
 
 const router = Router()
 
 
-router.post("/", sendMessage)
-router.get(
-    "/conversation/:id", 
-    currentUser, 
-    checkConversationAccess,
-    getMessages
+router.post(
+  "/",
+  currentUser,
+  validateSendMessage,
+  asyncHandler(sendMessage)
 )
+router.get(
+  "/:conversationId",
+  currentUser,
+  validateGetMessages,
+  asyncHandler(getMessages)
+)
+
 
 export default router
