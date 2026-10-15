@@ -2,30 +2,34 @@ import { Request, Response, NextFunction } from "express"
 import { prisma } from "../prisma.client.js"
 
 export const checkConversationAccess = async (
-    req: Request, 
-    res: Response,
-    next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
+  const conversationId = Number(
+    req.params.conversationId ?? req.body?.conversationId
+  )
 
-    const conversationId = Number(req.params.id)
-    const userId = req.user!.userId
+  if (!Number.isInteger(conversationId)) {
+    res.status(400).json({ error: "Invalid conversationId" })
+    return
+  }
 
-    try {
-        const member = await prisma.conversationMember.findFirst({
-            where: {
-                conversationId,
-                userId
-            }
-        })
+  const userId = req.user!.userId
 
-        if (!member) {
-            return res.status(403).json({ error: "Access denied" })
-        }
+  try {
+    const member = await prisma.conversationMember.findFirst({
+      where: { conversationId, userId }
+    })
 
-        next()
-    } catch (error) {
-        console.error(error)
-
-        res.status(500).json({ error: "Server error"})
+    if (!member) {
+      res.status(403).json({ error: "Access denied" })
+      return
     }
+
+    next()
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: "Server error" })
+  }
 }

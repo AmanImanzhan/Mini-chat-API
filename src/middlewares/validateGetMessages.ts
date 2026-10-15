@@ -7,8 +7,9 @@ export const validateGetMessages = (
 ) => {
   const conversationId = Number(req.params.conversationId)
 
-  if (isNaN(conversationId)) {
-    return res.status(400).json({ error: "Invalid conversationId" })
+  if (!Number.isInteger(conversationId)) {
+    res.status(400).json({ error: "Invalid conversationId" })
+    return
   }
 
   next()
