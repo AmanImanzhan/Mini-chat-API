@@ -28,6 +28,18 @@ npm run dev
 
 The server starts on `http://localhost:4001`. Generate a secret with `openssl rand -hex 32`.
 
+## Run with Docker
+
+Starts the API together with PostgreSQL. Migrations are applied automatically on startup. `.env` must contain `JWT_SECRET` (see `.env.example`).
+
+    docker compose up --build
+
+In GitHub Codespaces, user-defined Docker networks cannot connect containers to each other, so use the host-network variant instead:
+
+    docker compose -f docker-compose.codespaces.yml up --build
+
+The API is available at `http://localhost:4001`.
+
 ## Endpoints
 
 | Method | Path | Auth | Description |
@@ -57,7 +69,6 @@ curl -X POST http://localhost:4001/messages \
 
 ## Roadmap
 
-- Docker setup
 - Tests
 - Pagination for messages
 - WebSocket support
